@@ -1,0 +1,43 @@
+---
+- hosts: all
+  tasks:
+    - name: Get latest files from omd server
+      local_action: script files/checkmk/get_checkmk_files.sh
+      run_once: true
+      changed_when: false
+    - name: copy check_mk client to remote side
+      copy:
+        src: files/checkmk/check_mk_agent
+        dest: /usr/bin/check_mk_agent
+        owner: root
+        group: root
+        mode: 0700
+    - name: Set authorized keys
+      authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', 'files/checkmk/id_rsa.pub') }}"
+    - name: Create missing plugin directory
+      file:
+        path: /usr/lib/check_mk_agent/plugins
+        state: directory
+        mode: 0755
+    - name: copy apt check plugin
+      copy:
+        src: files/checkmk/apt
+        dest: /usr/lib/check_mk_agent/plugins
+        owner: root
+        group: root
+        mode: 0700
+    - name: Create missing local directory
+      file:
+        path: /usr/lib/check_mk_agent/local
+        state: directory
+        mode: 0755
+    - name: copy reboot_required check
+      copy:
+        src: files/checkmk/reboot_required
+        dest: /usr/lib/check_mk_agent/local
+        owner: root
+        group: root
+        mode: 0700
