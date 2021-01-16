@@ -22,7 +22,6 @@
     - name: Add ssh-key to users
       authorized_key:
         user: "{{ item }}"
-        #key: "{{ lookup('file', 'files/users/' + item + '/id_ed25519.pub') }}"
         key: "{{ lookup('file', 'files/users/' + item + '/id_rsa.pub') }}"
         state: present
       with_items: "{{ users }}"
