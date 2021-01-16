@@ -1,0 +1,23 @@
+---
+- hosts: all
+  vars:
+    local_path: /var/ansible/autowiki/linuxserver/
+    remote_host: dokuwiki.example.com
+    remote_path: /var/www/dokuwiki/data/pages/linuxserver/
+    remote_owner: www-data
+    remote_group: www-data
+  tasks:
+  - name: create host folder
+    local_action: file
+      path={{ local_path }}/{{ inventory_hostname }}
+      state=directory
+      mode=0755
+  - name: generate dokuwiki page
+    local_action: template
+      src=wiki.j2
+      dest={{ local_path }}/{{ inventory_hostname }}/{{ inventory_hostname }}.txt
+    notify:
+      - sync dokuwiki
+  handlers:
+  - name: sync dokuwiki
+    local_action: command rsync -r -e ssh -og --chown={{ remote_owner }}:{{ remote_group }} {{ local_path }} {{ remote_host }}:{{ remote_path }}
