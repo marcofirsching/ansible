@@ -1,9 +1,9 @@
 #!/bin/bash
 # FQDN or IP Address of CheckMK Server
-cmk_server="omd.rzhas.de"
+cmk_server="omd.example.com"
 
 # Name of the CheckMK Site
-cmk_site="rzhas"
+cmk_site="default"
 
 scp ${cmk_server}:/opt/omd/sites/${cmk_site}/share/check_mk/agents/check_mk_agent.linux /etc/ansible/playbooks/files/checkmk/check_mk_agent
 scp ${cmk_server}:/opt/omd/sites/${cmk_site}/share/check_mk/agents/plugins/mk_mysql /etc/ansible/playbooks/files/checkmk/plugins/mk_mysql
