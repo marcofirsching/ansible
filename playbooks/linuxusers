@@ -1,0 +1,36 @@
+---
+- hosts: all
+  vars:
+    users:
+      - newlinuxuser
+  tasks:
+    - name: Get os dependent variables
+      include_vars: "{{ item }}"
+      with_first_found:
+        - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_distribution }}.yml"
+        - default.yml
+
+    - name: Add the users and add to group 'sudo'
+      user:
+        name: "{{ item }}"
+        shell: /bin/bash
+        groups: "{{ sudo_group }}"
+        password: "{{ lookup('file', 'files/users/' + item + '/pw_sha512.hash') }}"
+      with_items: "{{ users }}"
+
+    - name: Add ssh-key to users
+      authorized_key:
+        user: "{{ item }}"
+        #key: "{{ lookup('file', 'files/users/' + item + '/id_ed25519.pub') }}"
+        key: "{{ lookup('file', 'files/users/' + item + '/id_rsa.pub') }}"
+        state: present
+      with_items: "{{ users }}"
+
+    - name: Remove old users
+      user:
+        name: "{{ item }}"
+        state: absent
+        remove: yes
+      with_items:
+        - oldlinuxuser
