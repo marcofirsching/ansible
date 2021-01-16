@@ -1,0 +1,85 @@
+====== {{ inventory_hostname }} ======
+===== Custom Information =====
+{{'{{page>custom}}'}}
+
+----
+''{{ ansible_managed }} - do not edit below this line''
+----
+Host Sheet for {{ ansible_fqdn }}
+^ FQDN | {{ ansible_fqdn }} |
+^ Distro | {{ ansible_distribution }} {{ ansible_distribution_version }} ({{ ansible_distribution_release }}) |
+^ Kernel | {{ ansible_kernel }} |
+^ Type | {{ ansible_product_name }} |
+
+===== Sizing =====
+^ Processor | {{ ansible_processor[2] }} |
+^ CPU / Cores | {{ ansible_processor_count }} / {{ ansible_processor_cores }} |
+^ RAM | {{ "%0.2f" % (ansible_memtotal_mb / 1024) }} GB|
+^ SWAP | {{ "%0.2f" % (ansible_swaptotal_mb / 1024) }} GB |
+
+===== Network Configuration =====
+==== IP Addresses ====
+=== Default IPv4 ===
+^ interface | {{ ansible_default_ipv4.interface|default('') }} |
+^ address | {{ ansible_default_ipv4.address|default('') }} |
+^ netmask | {{ ansible_default_ipv4.netmask|default('') }} |
+^ gateway | {{ ansible_default_ipv4.gateway|default('') }} |
+^ network | {{ ansible_default_ipv4.network|default('') }} |
+^ broadcast | {{ ansible_default_ipv4.broadcast|default('') }} |
+^ type | {{ ansible_default_ipv4.type|default('') }} |
+^ mtu | {{ ansible_default_ipv4.mtu|default('') }} |
+^ mac | {{ ansible_default_ipv4.macaddress|default('') }} |
+
+== all ipv4 addresses ==
+{% for ip in ansible_all_ipv4_addresses %}
+^ {{ ip }} |
+{% endfor %}
+
+=== Default IPv6 ===
+^ interface | {{ ansible_default_ipv6.interface|default('') }} |
+^ address | {{ ansible_default_ipv6.address|default('') }} |
+^ netmask | {{ ansible_default_ipv6.prefix|default('') }} |
+^ gateway | {{ ansible_default_ipv6.gateway|default('') }} |
+^ type | {{ ansible_default_ipv6.type|default('') }} |
+^ mtu | {{ ansible_default_ipv6.mtu|default('') }} |
+^ mac | {{ ansible_default_ipv6.macaddress|default('') }} |
+
+== all ipv6 addresses ==
+{% for ip in ansible_all_ipv6_addresses %}
+^ {{ ip }} |
+{% endfor %}
+
+==== DNS Setup ====
+{% set ns = hostvars[inventory_hostname]['ansible_dns'] %}
+{% for n in ns.nameservers %}
+^ nameservers | {{ n }} |
+{% endfor %}
+
+===== Drives =====
+==== DISKs ====
+^ DISK ^ MODEL ^ VENDOR ^ SIZE ^ PARTITION ^ P-SIZE ^ MOUNT ^
+{% for d in ansible_devices %}
+{% if d.startswith('loop') %}
+{% continue %}
+{% endif %}
+{% set dev = hostvars[inventory_hostname]['ansible_devices'][d] %}
+{% if dev.partitions %}
+{% for p in dev.partitions %}
+{% set part = dev.partitions[p] %}
+{% if loop.first %}
+| {{ d }} | {{ dev.model }} | {{ dev.vendor }} | {{ dev.size }} | {{ p }} | {{ part.size }} | {{ part.holders | join(', ') }} |
+{% else %}
+|:::|:::|:::|:::| {{ p }} | {{ part.size }} | {{ part.holders | join(', ')}} |
+{% endif %}
+{% endfor %}
+{% else %}
+| {{ d }} | {{ dev.model }} | {{ dev.vendor }} | {{ dev.size }} | |||
+{% endif %}
+{% endfor %}
+
+==== Mount Points ====
+^ MountPoint ^ Device ^ fstype ^ Size ^
+{% for mp in ansible_mounts %}
+{# set mp = hostvars[inventory_hostname]['ansible_mounts'] #}
+| {{ mp.mount }} | {{ mp.device }} | {{ mp.fstype }} | {{ "%0.2f" % (mp.size_total / 1024 / 1024 / 1024) }} GB |
+{% endfor %}
